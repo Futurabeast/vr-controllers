@@ -11,18 +11,21 @@
 WebServer         Server;          // Replace with WebServer for ESP32
 AutoConnect       Portal(Server);
 AutoConnectConfig Config("LEFT HAND CONTROLLER", "12345678");
+// AutoConnectConfig Config("RIGHT HAND CONTROLLER", "12345678");
 
 
 const char* host = "192.168.1.27";
 const int publish_port = 12000;
-const int touch_thresold = 25;
 
 #define buttons_max 4
 #define samples 3
 char button_map[buttons_max] = {4, 12, 2, 15};
+// char button_map[buttons_max] = {12, 14, 27, 33};
+
 uint16_t pressed[buttons_max] = {0};
 uint8_t sampled_values[buttons_max][samples] = {0};
 uint32_t values[buttons_max] = {0};
+uint8_t button_thresolds[buttons_max] = {40, 45, 40, 40};
 uint8_t current_sample = 0;
 
 void rootPage() {
@@ -32,7 +35,7 @@ void rootPage() {
 
 void setup() {
   delay(1000);
-
+  pinMode(22, OUTPUT);
   setCpuFrequencyMhz(240);
   Serial.begin(9600);
   Serial.println();
@@ -57,6 +60,7 @@ void setup() {
 
 void loop() {
   Portal.handleClient();
+  digitalWrite(22, LOW);
 
   if (WiFi.status() == WL_CONNECTED) {
     for (int i = 0; i < buttons_max; i++) {
@@ -69,7 +73,7 @@ void loop() {
           values[i] += sampled_values[i][j];
         }
         values[i] = values[i] / samples;
-        pressed[i] = values[i] < touch_thresold;
+        pressed[i] = values[i] < button_thresolds[i];
       }
       current_sample = 0;
     }
